@@ -97,11 +97,12 @@ def breadthFirstSearch(problem):
     succ.push((problem.getStartState(), []))                # Starting with start node. No path to start node.
     visited = []                                            # List to track which nodes we've visited.
     while True:                                             # Break when we hit goal node.
+        # print(succ.list)
         cur = succ.pop()                                    # Start with the most recently added node (DFS).
-        visited.append(cur[0])
         if not problem.isGoalState(cur[0]):                 # Current node is not the finish node.
-            for successor in problem.getSuccessors(cur[0]): # Check all successors of the current node.
-                if successor[0] not in visited:             # Skip it if we've already visited it.
+            if cur[0] not in visited:                       # Skip it if we've already visited it.
+                visited.append(cur[0])
+                for successor in problem.getSuccessors(cur[0]): # Check all successors of the current node.
                     path = cur[1][:]                        # Copy the path from the current node...
                     path.append(successor[1])               #      and add the direction towards the successor to it.
                     succ.push((successor[0], path))         # Add the successor to the list of nodes to be visited.
@@ -149,8 +150,27 @@ def nullHeuristic(state, problem=None):
 
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    start = problem.getStartState()
+    succ = util.PriorityQueue()                             # Priority Queue will hold tuples of nodes we still need to visit, their paths, and the cost to reach them.
+    succ.push((start, [], 0), heuristic(start, problem))    # Starting with start node. No path to start node. Using the heuristic as the priority.
+    visited = []                                            # List to track which nodes we've visited.
+    while True:                                             # Break when we hit goal node.
+        cur = succ.pop()                                    # Start with the most recently added node (DFS).
+        if not problem.isGoalState(cur[0]):                 # Current node is not the finish node.
+            if cur[0] not in visited:             # Skip it if we've already visited it.
+                visited.append(cur[0])
+                for successor in problem.getSuccessors(cur[0]): # Check all successors of the current node.
+                    path = cur[1][:]                        # Copy the path from the current node...
+                    path.append(successor[1])               #      and add the direction towards the successor to it.
+                    cost = cur[2] + successor[2]
+                    succ.push((successor[0], path, cost), heuristic(successor[0], problem) + cost) # Add the successor to the list of nodes to be visited.
+        else:                                               # Found goal.
+            actions = cur[1]                                # Get the saved path to the goal node.
+            break                                           # Stop looping.
+        # if succ.isEmpty():
+        #     break
+
+    return actions                                          # Return the optimal path to the goal node.
 
 
 # Abbreviations
