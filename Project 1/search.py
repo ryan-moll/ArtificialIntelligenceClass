@@ -93,13 +93,52 @@ def depthFirstSearch(problem):
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    succ = util.Queue()                                     # Queue will hold tuples of nodes we still need to visit and their paths.
+    succ.push((problem.getStartState(), []))                # Starting with start node. No path to start node.
+    visited = []                                            # List to track which nodes we've visited.
+    while True:                                             # Break when we hit goal node.
+        cur = succ.pop()                                    # Start with the most recently added node (DFS).
+        visited.append(cur[0])
+        if not problem.isGoalState(cur[0]):                 # Current node is not the finish node.
+            for successor in problem.getSuccessors(cur[0]): # Check all successors of the current node.
+                if successor[0] not in visited:             # Skip it if we've already visited it.
+                    path = cur[1][:]                        # Copy the path from the current node...
+                    path.append(successor[1])               #      and add the direction towards the successor to it.
+                    succ.push((successor[0], path))         # Add the successor to the list of nodes to be visited.
+        else:                                               # Found goal.
+            actions = cur[1]                                # Get the saved path to the goal node.
+            break                                           # Stop looping.
+
+    return actions                                          # Return the path to the goal node.
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    succ = util.PriorityQueue()                             # Priority Queue will hold tuples of nodes we still need to visit, their paths, and the cost to reach them.
+    succ.push((problem.getStartState(), [], 0), 0)          # Starting with start node. No path to start node.
+    visited = []                                            # List to track which nodes we've visited.
+    #solution = []                                          # Store the most optimal path to finsih so far.
+    while True:                                             # Break when we hit goal node.
+        cur = succ.pop()                                    # Start with the most recently added node (DFS).
+        visited.append(cur[0])
+        if not problem.isGoalState(cur[0]):                 # Current node is not the finish node.
+            for successor in problem.getSuccessors(cur[0]): # Check all successors of the current node.
+                if successor[0] not in visited:             # Skip it if we've already visited it.
+                    path = cur[1][:]                        # Copy the path from the current node...
+                    path.append(successor[1])               #      and add the direction towards the successor to it.
+                    cost = cur[2] + successor[2]
+                    succ.push((successor[0], path, cost), cost) # Add the successor to the list of nodes to be visited.
+        else:                                               # Found goal.
+            actions = cur[1]                                # Get the saved path to the goal node.
+            break                                           # Stop looping.
+        #     if not solution:                                # This is the first successful path.
+        #         solution = cur[1][:]                        # Store the path.
+        #     else:                                           # This is not the first successful path found.
+        #         if len(solution) > len(cur[1]):             # Check if this new path is shorter than the previous one.
+        #             solution = cur[1][:]                    # Update if it is.
+        # if succ.isEmpty():                                  # No new nodes to try.
+        #     break
+
+    return actions                                          # Return the optimal path to the goal node.
 
 def nullHeuristic(state, problem=None):
     """
