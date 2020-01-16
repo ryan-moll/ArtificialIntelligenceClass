@@ -120,10 +120,10 @@ def uniformCostSearch(problem):
     #solution = []                                          # Store the most optimal path to finsih so far.
     while True:                                             # Break when we hit goal node.
         cur = succ.pop()                                    # Start with the most recently added node (DFS).
-        visited.append(cur[0])
         if not problem.isGoalState(cur[0]):                 # Current node is not the finish node.
-            for successor in problem.getSuccessors(cur[0]): # Check all successors of the current node.
-                if successor[0] not in visited:             # Skip it if we've already visited it.
+            if cur[0] not in visited:             # Skip it if we've already visited it.
+                visited.append(cur[0])
+                for successor in problem.getSuccessors(cur[0]): # Check all successors of the current node.
                     path = cur[1][:]                        # Copy the path from the current node...
                     path.append(successor[1])               #      and add the direction towards the successor to it.
                     cost = cur[2] + successor[2]
