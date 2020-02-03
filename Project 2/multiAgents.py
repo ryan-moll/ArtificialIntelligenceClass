@@ -173,8 +173,59 @@ class MinimaxAgent(MultiAgentSearchAgent):
         gameState.isLose():
         Returns whether or not the game state is a losing state
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        #print(gameState.getLegalActions(0)) # legal actions for pacman
+        def minimax(s, d, a): # s=state d=depthlevel a=agentnumber
+            # print("depth: ", d, " agent: ", a, " s.state: ", s.state)
+            if s.isWin() or s.isLose() or d == self.depth:
+                # print("State: ", s.state)
+                return self.evaluationFunction(s) #(54 defined by me)
+            elif a == 0: #agent is pacman
+                # print("Pacman!")
+                actionCosts = []
+                for action in s.getLegalActions(0):
+                    # print("Pacman: Calling minimax for action '", action, "'", sep='')
+                    actionCost = minimax(s.generateSuccessor(0, action), d+1, 1)
+                    actionCosts.append(actionCost)
+                return max(actionCosts)
+            else: #agent is a ghost
+                # print("Ghost. Agent ", a)
+                nxt = a + 1
+                if nxt == gameState.getNumAgents():
+                    nxt = 0
+                    d += 1
+                actionCosts = []
+                for action in s.getLegalActions(a):
+                    # print("Ghost: Calling minimax for action '", action, "'", sep='')
+                    actionCost = minimax(s.generateSuccessor(a, action), d, nxt)
+                    actionCosts.append(actionCost)
+                return min(actionCosts)
+
+
+
+        successorStates = []
+        mx = -999999
+        # print("numAgents: ", gameState.problem.numAgents)
+        # print("winStates: ", gameState.problem.winStates)
+        # print("loseStates: ", gameState.problem.loseStates)
+        # print("evaluation: ", gameState.problem.evaluation)
+        # print("successors: ", gameState.problem.successors)
+        # print("stateToSuccessorMap: ", gameState.problem.stateToSuccessorMap)
+        # print("stateToActions: ", gameState.problem.stateToActions)
+        for action in gameState.getLegalActions(0):
+            # print("Calling minimax for action: ", str(action))
+            result = minimax(gameState.generateSuccessor(0, action), 0, 1)
+            if result > mx:
+                move = action
+                mx = result
+
+        try:
+           move
+        except NameError:
+            Directions.NORTH
+
+        # print("getAction returning '", move, "'", sep='')
+        return move
+        
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
