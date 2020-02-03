@@ -89,6 +89,7 @@ def depthFirstSearch(problem):
             actions = cur[1]                                # Get the saved path to the goal node.
             break                                           # Stop looping.
 
+    print(actions)
     return actions                                          # Return the path to the goal node.
 
 def breadthFirstSearch(problem):

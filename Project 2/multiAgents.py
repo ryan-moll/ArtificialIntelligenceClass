@@ -70,11 +70,50 @@ class ReflexAgent(Agent):
         successorGameState = currentGameState.generatePacmanSuccessor(action)
         newPos = successorGameState.getPacmanPosition()
         newFood = successorGameState.getFood()
+
+        #print("\n__________\ncurrentGameState:\n", currentGameState, "\nsuccessorGameState:\n", successorGameState, sep='')
+        x = 0
+        y = 0
+        foodCount = 0
+        closestFood = [(-1,-1), -1]
+        for food in newFood.asList(): # (game.py 172/273)
+            foodDist = abs(newPos[0]-food[0])+abs(newPos[1]-food[1])
+            if foodCount is 0:
+                #print(food)
+                closestFood[0] = food
+                closestFood[1] = foodDist
+                foodCount += 1
+                continue
+            if foodDist < closestFood[1]:
+                closestFood[0] = food
+                closestFood[1] = foodDist
+            foodCount += 1
+            #print("food[x]: ", food)
+        #print(closestFood)
+        if not closestFood[1]:
+            f = float(2)
+        else:
+            f = float(1/closestFood[1])
+
+
         newGhostStates = successorGameState.getGhostStates()
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
-        "*** YOUR CODE HERE ***"
-        return successorGameState.getScore()
+        #print(newGhostStates)
+        # for ghost in newGhostStates:
+        #     print(getGhostPosition)
+        ghostDistance = 0
+        for ghost in successorGameState.getGhostPositions(): #(pacman.py 61/170)
+            curGhostDistance = abs(newPos[0]-ghost[0])+abs(newPos[1]-ghost[1])
+            # print(curGhostDistance)
+            ghostDistance += curGhostDistance
+            #print(ghost)
+        if not ghostDistance:
+            g = float(5)
+        else:
+            g = float(1/ghostDistance)
+
+        return successorGameState.getScore() + f - g
 
 def scoreEvaluationFunction(currentGameState):
     """
