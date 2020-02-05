@@ -264,7 +264,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             return v
 
         def prune(s, d, a, alpha, beta): # s=state d=depth a=agent
-            if s.isLWin() or s.isLose() or d is self.depth:
+            if s.isWin() or s.isLose() or d is self.depth:
                 return self.evaluationFunction(s)
             if a is 0: # Pacman
                 return maxValue(s, d, a, alpha, beta)
@@ -348,8 +348,38 @@ def betterEvaluationFunction(currentGameState):
 
     DESCRIPTION: <write something here so we know what you did>
     """
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    y = 0
+    x = 0
+    food = currentGameState.getFood().asList()
+    foodCount = len(food)
+    pacman = currentGameState.getPacmanPosition()
+    closestFood = 9999999999
+    for f in food:
+        foodDist = abs(pacman[0]-f[0])+abs(pacman[1]-f[1])
+        if foodDist < closestFood:
+            closestFood = foodDist
+    if not closestFood:
+        f = float(2)
+    else:
+        f = float(1/closestFood)
+
+    totalGhostDist = 0
+    adjacentGhosts = 0
+    ghosts = currentGameState.getGhostPositions()
+    ghostCount = len(ghosts)
+    for g in ghosts:
+        ghostDist = abs(pacman[0]-g[0])+abs(pacman[1]-g[1])
+        if ghostDist is 1: # Ghost is an immediate threat to pacman
+            adjacentGhosts += 1
+        totalGhostDist += ghostDist
+        
+    if not totalGhostDist:
+        g = float(5)
+    else:
+        g = float(1/totalGhostDist)
+
+    capsuleCount = len(currentGameState.getCapsules())
+    return currentGameState.getScore() + f - g - capsuleCount - adjacentGhosts
 
 # Abbreviation
 better = betterEvaluationFunction
