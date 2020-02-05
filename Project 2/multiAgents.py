@@ -178,29 +178,32 @@ class MinimaxAgent(MultiAgentSearchAgent):
             # print("depth: ", d, " agent: ", a, " s.state: ", s.state)
             if s.isWin() or s.isLose() or d is self.depth:
                 # print("State: ", s.state)
-                return self.evaluationFunction(s) #(54 defined by me)
-            elif a == 0: #agent is pacman
+                score = self.evaluationFunction(s) #(54 defined by me)
+                return score
+            elif a is 0: #agent is pacman
                 # print("Pacman!")
                 actionCosts = []
                 # print("Max- Legal actions: ", s.getLegalActions(0))
-                for action in s.getLegalActions(0):
+                for action in s.getLegalActions(0): # TODO a=0
                     # print("Max: Calling minimax for action '", action, "'", sep='')
-                    actionCost = minimax(s.generateSuccessor(0, action), d+1, 1)
+                    actionCost = minimax(s.generateSuccessor(0, action), d, 1) # TODO a=0
                     actionCosts.append(actionCost)
-                return max(actionCosts)
+                mx = max(actionCosts)
+                return mx
             else: #agent is a ghost
                 # print("Ghost. Agent ", a)
-                nxt = a + 1
-                if nxt == gameState.getNumAgents():
-                    nxt = 0
-                    d += 1
                 actionCosts = []
                 # print("Min- Legal actions: ", s.getLegalActions(0))
                 for action in s.getLegalActions(a):
                     # print("Min: Calling minimax for action '", action, "'", sep='')
-                    actionCost = minimax(s.generateSuccessor(a, action), d, nxt)
-                    actionCosts.append(actionCost)
-                return min(actionCosts)
+                    if (a+1) is gameState.getNumAgents(): # Next agent is pacman
+                        actionCost = minimax(s.generateSuccessor(a, action), d+1, 0)
+                        actionCosts.append(actionCost)
+                    else: # More ghosts
+                        actionCost = minimax(s.generateSuccessor(a, action), d, a+1)
+                        actionCosts.append(actionCost)
+                mn = min(actionCosts)
+                return mn
 
 
 
@@ -216,10 +219,10 @@ class MinimaxAgent(MultiAgentSearchAgent):
         # print("Start- Legal actions: ", gameState.getLegalActions(0))
         for action in gameState.getLegalActions(0):
             # print("Calling minimax for action: ", str(action))
-            result = minimax(gameState.generateSuccessor(0, action), 0, 1)
-            if result > mx:
+            u = minimax(gameState.generateSuccessor(0, action), 0, 1)
+            if u > mx:
                 move = action
-                mx = result
+                mx = u
 
         try:
            move
@@ -251,13 +254,11 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 
         def minValue(s, d, a, alpha, beta): # s=state d=depth a=agent
             v = 9999999999
-            if (a+1) is s.getNumAgents():   # Last ghost
-                nxt = 0                     # Next agent will be pacman
-                d += 1
-            else:
-                nxt = a + 1
             for action in s.getLegalActions(a):
-                v = min(v, prune(s.generateSuccessor(a, action), d, nxt, alpha, beta))
+                if (a+1) is s.getNumAgents():   # Last ghost
+                    v = min(v, prune(s.generateSuccessor(a, action), d+1, 0, alpha, beta))
+                else:
+                    v = min(v, prune(s.generateSuccessor(a, action), d, a+1, alpha, beta))
                 if v < alpha:
                     return v
                 beta = min(beta, v)
@@ -265,11 +266,14 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 
         def prune(s, d, a, alpha, beta): # s=state d=depth a=agent
             if s.isWin() or s.isLose() or d is self.depth:
-                return self.evaluationFunction(s)
-            if a is 0: # Pacman
-                return maxValue(s, d, a, alpha, beta)
+                score = self.evaluationFunction(s) #(54 defined by me)
+                return score
+            elif a is 0: # Pacman
+                mx = maxValue(s, d, a, alpha, beta)
+                return mx
             else:
-                return minValue(s, d, a, alpha, beta)
+                mn = minValue(s, d, a, alpha, beta)
+                return mn
 
         u = -999999999999
         alpha = -999999999999
@@ -306,23 +310,22 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         """
         def expectimax(s, d, a):
             if s.isWin() or s.isLose() or d is self.depth:
-                return self.evaluationFunction(s)
-
-            if a is 0:
+                score = self.evaluationFunction(s) #(54 defined by me)
+                return score
+            elif a is 0:
                 expectimaxResults = []
                 for action in s.getLegalActions(a):
                     expectimaxResults.append(expectimax(s.generateSuccessor(a, action), d, 1))
-                return max(expectimaxResults)
+                mx = max(expectimaxResults)
+                return mx
             else:
-                if (a+1) is s.getNumAgents():
-                    nxt = 0
-                    d += 1
-                else:
-                    nxt = a + 1
                 expectimaxResults = []
                 actions = s.getLegalActions(a)
                 for action in actions:
-                    expectimaxResults.append(expectimax(s.generateSuccessor(a, action), d, nxt))
+                    if (a+1) is s.getNumAgents():
+                        expectimaxResults.append(expectimax(s.generateSuccessor(a, action), d+1, 0))
+                    else:
+                        expectimaxResults.append(expectimax(s.generateSuccessor(a, action), d, a+1))
                 temp = sum(expectimaxResults)
                 avg = temp / float(len(actions))
                 return avg
