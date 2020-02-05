@@ -264,7 +264,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             return v
 
         def prune(s, d, a, alpha, beta): # s=state d=depth a=agent
-            if s.isLose() or s.isWin() or d is self.depth:
+            if s.isLWin() or s.isLose() or d is self.depth:
                 return self.evaluationFunction(s)
             if a is 0: # Pacman
                 return maxValue(s, d, a, alpha, beta)
@@ -304,8 +304,42 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         All ghosts should be modeled as choosing uniformly at random from their
         legal moves.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        def expectimax(s, d, a):
+            if s.isWin() or s.isLose() or d is self.depth:
+                return self.evaluationFunction(s)
+
+            if a is 0:
+                expectimaxResults = []
+                for action in s.getLegalActions(a):
+                    expectimaxResults.append(expectimax(s.generateSuccessor(a, action), d, 1))
+                return max(expectimaxResults)
+            else:
+                if (a+1) is s.getNumAgents():
+                    nxt = 0
+                    d += 1
+                else:
+                    nxt = a + 1
+                expectimaxResults = []
+                actions = s.getLegalActions(a)
+                for action in actions:
+                    expectimaxResults.append(expectimax(s.generateSuccessor(a, action), d, nxt))
+                temp = sum(expectimaxResults)
+                avg = temp / float(len(actions))
+                return avg
+
+        mx = -9999999999
+        for action in gameState.getLegalActions(0):
+            u = expectimax(gameState.generateSuccessor(0, action), 0, 1)
+            if u > mx:
+                mx = u
+                move = action
+
+        try:
+           move
+        except NameError:
+            Directions.NORTH
+
+        return move
 
 def betterEvaluationFunction(currentGameState):
     """
