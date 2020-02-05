@@ -182,8 +182,9 @@ class MinimaxAgent(MultiAgentSearchAgent):
             elif a == 0: #agent is pacman
                 # print("Pacman!")
                 actionCosts = []
+                # print("Max- Legal actions: ", s.getLegalActions(0))
                 for action in s.getLegalActions(0):
-                    # print("Pacman: Calling minimax for action '", action, "'", sep='')
+                    # print("Max: Calling minimax for action '", action, "'", sep='')
                     actionCost = minimax(s.generateSuccessor(0, action), d+1, 1)
                     actionCosts.append(actionCost)
                 return max(actionCosts)
@@ -194,8 +195,9 @@ class MinimaxAgent(MultiAgentSearchAgent):
                     nxt = 0
                     d += 1
                 actionCosts = []
+                # print("Min- Legal actions: ", s.getLegalActions(0))
                 for action in s.getLegalActions(a):
-                    # print("Ghost: Calling minimax for action '", action, "'", sep='')
+                    # print("Min: Calling minimax for action '", action, "'", sep='')
                     actionCost = minimax(s.generateSuccessor(a, action), d, nxt)
                     actionCosts.append(actionCost)
                 return min(actionCosts)
@@ -211,6 +213,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         # print("successors: ", gameState.problem.successors)
         # print("stateToSuccessorMap: ", gameState.problem.stateToSuccessorMap)
         # print("stateToActions: ", gameState.problem.stateToActions)
+        # print("Start- Legal actions: ", gameState.getLegalActions(0))
         for action in gameState.getLegalActions(0):
             # print("Calling minimax for action: ", str(action))
             result = minimax(gameState.generateSuccessor(0, action), 0, 1)
