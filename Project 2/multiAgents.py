@@ -176,7 +176,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         #print(gameState.getLegalActions(0)) # legal actions for pacman
         def minimax(s, d, a): # s=state d=depthlevel a=agentnumber
             # print("depth: ", d, " agent: ", a, " s.state: ", s.state)
-            if s.isWin() or s.isLose() or d == self.depth:
+            if s.isWin() or s.isLose() or d is self.depth:
                 # print("State: ", s.state)
                 return self.evaluationFunction(s) #(54 defined by me)
             elif a == 0: #agent is pacman
@@ -205,7 +205,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
 
         successorStates = []
-        mx = -999999
+        mx = -999999999999
         # print("numAgents: ", gameState.problem.numAgents)
         # print("winStates: ", gameState.problem.winStates)
         # print("loseStates: ", gameState.problem.loseStates)
@@ -239,8 +239,58 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         """
         Returns the minimax action using self.depth and self.evaluationFunction
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        def maxValue(s, d, a, alpha, beta): # s=state d=depth a=agent
+            v = -9999999999
+            for action in s.getLegalActions(a):
+                v = max(v, prune(s.generateSuccessor(a, action), d, 1, alpha, beta)) # Next agent will always be ghost for max so pass 1 for a
+                if v > beta:
+                    return v
+                alpha = max(alpha, v)
+            return v
+
+
+        def minValue(s, d, a, alpha, beta): # s=state d=depth a=agent
+            v = 9999999999
+            if (a+1) is s.getNumAgents():   # Last ghost
+                nxt = 0                     # Next agent will be pacman
+                d += 1
+            else:
+                nxt = a + 1
+            for action in s.getLegalActions(a):
+                v = min(v, prune(s.generateSuccessor(a, action), d, nxt, alpha, beta))
+                if v < alpha:
+                    return v
+                beta = min(beta, v)
+            return v
+
+        def prune(s, d, a, alpha, beta): # s=state d=depth a=agent
+            if s.isLose() or s.isWin() or d is self.depth:
+                return self.evaluationFunction(s)
+            if a is 0: # Pacman
+                return maxValue(s, d, a, alpha, beta)
+            else:
+                return minValue(s, d, a, alpha, beta)
+
+        u = -999999999999
+        alpha = -999999999999
+        beta = 999999999999
+        for action in gameState.getLegalActions(0): # Start with pacman
+            child = prune(gameState.generateSuccessor(0, action), 0, 1, alpha, beta)
+            if child > u:
+                u = child
+                move = action
+            if u > beta:
+                return u
+            alpha = max(u, alpha)
+
+        try:
+           move
+        except NameError:
+            Directions.NORTH
+
+        return move
+
+
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
