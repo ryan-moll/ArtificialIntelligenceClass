@@ -194,13 +194,14 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
         # Compute the predecessors of all states
         predecessors = {}
         for state in self.mdp.getStates():
-            p = set()
-            for subState in self.mdp.getStates():
-                for action in self.mdp.getPossibleActions(subState):
-                    for neighbor in self.mdp.getTransitionStatesAndProbs(subState, action):
-                        if neighbor[0] is state:
-                            p.add(subState)
-            predecessors[state] = p
+            if self.mdp.isTerminal(state):
+                continue
+            for action in self.mdp.getPossibleActions(state):
+                for neighbor in self.mdp.getTransitionStatesAndProbs(state, action):
+                    if neighbor[0] not in predecessors.keys():
+                        predecessors[neighbor[0]] = {state}
+                    else:
+                        predecessors[neighbor[0]].add(state)
 
         # Initialize an empty priority queue
         q = util.PriorityQueue()
@@ -215,12 +216,12 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
                 optimalAction = max(stateActionValues)
                 diff = 0 - abs(self.values[s] - optimalAction)
                 # Push s into the priority queue with priority -diff (note that this is negative). We use a negative because the priority queue is a min heap, but we want to prioritize updating states that have a higher error.
-                q.push(s, diff)
+                q.update(s, diff)
             else: # (s is a terminal state)
                 self.values[s] = 0
 
-        # For iteration in 0, 1, 2, ..., self.iterations - 1:
-        for i in range(self.iterations - 1):
+        # For iteration in 0, 1, 2, ..., self.iterations:
+        for i in range(self.iterations):
             # If the priority queue is empty, then terminate.
             if q.isEmpty():
                 break
@@ -234,16 +235,16 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
                 optimalAction = max(stateActionValues)
                 self.values[s] = optimalAction
 
-                #self.values[s] = self.getValue(state) #sus
-
             # For each predecessor p of s:
             for p in predecessors[s]:
+                if self.mdp.isTerminal(p):
+                    continue
                 # Find the absolute value of the difference between the current value of p in self.values and the highest Q-value across all possible actions from p (this represents what the value should be); call this number diff. Do NOT update self.values[p] in this step.
                 stateActionValues = []
-                for action in self.mdp.getPossibleActions(s):
-                    stateActionValues.append(self.getQValue(s, action))
+                for action in self.mdp.getPossibleActions(p):
+                    stateActionValues.append(self.getQValue(p, action))
                 optimalAction = max(stateActionValues)
-                diff = abs(self.getValue(s) - optimalAction)
+                diff = abs(self.getValue(p) - optimalAction)
                 # If diff > theta, push p into the priority queue with priority -diff (note that this is negative), as long as it does not already exist in the priority queue with equal or lower priority. As before, we use a negative because the priority queue is a min heap, but we want to prioritize updating states that have a higher error.
                 if diff > self.theta:
                     diff = 0 - diff
