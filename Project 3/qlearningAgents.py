@@ -182,15 +182,20 @@ class ApproximateQAgent(PacmanQAgent):
           Should return Q(state,action) = w * featureVector
           where * is the dotProduct operator
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        ret = 0
+        features = self.featExtractor.getFeatures(state, action)
+        for f in features:
+            ret += features[f] * self.weights[f]
+        return ret
 
     def update(self, state, action, nextState, reward):
         """
            Should update your weights based on transition
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        diff = ((self.discount * self.getValue(nextState)) + reward) - self.getQValue(state, action)
+        features = self.featExtractor.getFeatures(state, action)
+        for f in features:
+            self.weights[f] = self.weights[f] + self.alpha * features[f] * diff
 
     def final(self, state):
         "Called at the end of each game."
