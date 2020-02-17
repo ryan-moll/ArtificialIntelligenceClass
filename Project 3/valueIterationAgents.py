@@ -69,7 +69,7 @@ class ValueIterationAgent(ValueEstimationAgent):
                     val = 0
                     for neighbor in self.mdp.getTransitionStatesAndProbs(state, action): # Returns list of (nextState, prob) pairs
                         #val += (neighbor[1]*(self.mdp.getReward(state, action, neighbor[0]) + self.discount*self.values[neighbor[0]]))
-                        val += (neighbor[1]*(self.mdp.getReward(state, action, neighbor[0]) + self.discount*stateValues[neighbor[0]])) #TODO: Replace w computeQvalueFromValues???
+                        val += (neighbor[1]*(self.mdp.getReward(state, action, neighbor[0]) + self.discount*stateValues[neighbor[0]])) #TODO: Replace w computeQValueFromValues???
                     stateActionValues.append(val)
                 if len(self.mdp.getPossibleActions(state)) > 0:
                     optimalAction = max(stateActionValues)
@@ -191,5 +191,60 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
         ValueIterationAgent.__init__(self, mdp, discount, iterations)
 
     def runValueIteration(self):
-        "*** YOUR CODE HERE ***"
+        # Compute the predecessors of all states
+        predecessors = {}
+        for state in self.mdp.getStates():
+            p = set()
+            for subState in self.mdp.getStates():
+                for action in self.mdp.getPossibleActions(subState):
+                    for neighbor in self.mdp.getTransitionStatesAndProbs(subState, action):
+                        if neighbor[0] is state:
+                            p.add(subState)
+            predecessors[state] = p
 
+        # Initialize an empty priority queue
+        q = util.PriorityQueue()
+
+        # For each non-terminal state s: (note: must iterate over states in the order returned by self.mdp.getStates())
+        for s in self.mdp.getStates():
+            if not self.mdp.isTerminal(s):
+                # Find the absolute value of the difference between the current value of s in self.values and the highest Q-value across all possible actions from s (this represents what the value should be); call this number diff. Do NOT update self.values[s] in this step.
+                stateActionValues = []
+                for action in self.mdp.getPossibleActions(s):
+                    stateActionValues.append(self.getQValue(s, action))
+                optimalAction = max(stateActionValues)
+                diff = 0 - abs(self.values[s] - optimalAction)
+                # Push s into the priority queue with priority -diff (note that this is negative). We use a negative because the priority queue is a min heap, but we want to prioritize updating states that have a higher error.
+                q.push(s, diff)
+            else: # (s is a terminal state)
+                self.values[s] = 0
+
+        # For iteration in 0, 1, 2, ..., self.iterations - 1:
+        for i in range(self.iterations - 1):
+            # If the priority queue is empty, then terminate.
+            if q.isEmpty():
+                break
+            # Pop a state s off the priority queue.
+            s = q.pop()
+            # Update s's value (if it is not a terminal state) in self.values.
+            if not self.mdp.isTerminal(s):
+                stateActionValues = []
+                for action in self.mdp.getPossibleActions(s):
+                    stateActionValues.append(self.computeQValueFromValues(s, action))
+                optimalAction = max(stateActionValues)
+                self.values[s] = optimalAction
+
+                #self.values[s] = self.getValue(state) #sus
+
+            # For each predecessor p of s:
+            for p in predecessors[s]:
+                # Find the absolute value of the difference between the current value of p in self.values and the highest Q-value across all possible actions from p (this represents what the value should be); call this number diff. Do NOT update self.values[p] in this step.
+                stateActionValues = []
+                for action in self.mdp.getPossibleActions(s):
+                    stateActionValues.append(self.getQValue(s, action))
+                optimalAction = max(stateActionValues)
+                diff = abs(self.getValue(s) - optimalAction)
+                # If diff > theta, push p into the priority queue with priority -diff (note that this is negative), as long as it does not already exist in the priority queue with equal or lower priority. As before, we use a negative because the priority queue is a min heap, but we want to prioritize updating states that have a higher error.
+                if diff > self.theta:
+                    diff = 0 - diff
+                    q.update(p, diff)
